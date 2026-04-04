@@ -42,3 +42,7 @@ export type AIMessage =
   | OpenAI.Chat.Completions.ChatCompletionAssistantMessageParam
   | { role: "user"; content: string; tool_call_id: string }
   | { role: "tool"; content: string; tool_call_id: string };
+
+// Define agent modes, the user can swtich between three modes: normal, dev and student
+
+export type AgentMode = "default" | "dev" | "student";

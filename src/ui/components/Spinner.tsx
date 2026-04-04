@@ -10,7 +10,7 @@ export function Spinner({ label = 'Thinking...' }: SpinnerProps) {
   return (
     <Text>
       <Text color="cyan">
-        <InkSpinner type="dots" />
+        <InkSpinner type="star" />
       </Text>
       {' '}
       <Text dimColor>{label}</Text>

@@ -31,7 +31,7 @@ export function Input({ onSubmit, disabled = false }: InputProps) {
   });
 
   return (
-    <Box>
+    <Box width="100%">
       <Text color="blue" bold>
         {'> '}
       </Text>
