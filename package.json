@@ -32,10 +32,11 @@
     "ai": "^5.0.102",
     "apache-arrow": "^18.1.0",
     "ink": "github:vadimdemedes/ink",
+    "ink-scroll-view": "^0.3.6",
     "ink-spinner": "^5.0.0",
     "lowdb": "^7.0.1",
     "openai": "^6.24.0",
-    "react": "^19.2.0",
+    "react": "^19.2.4",
     "shelljs": "^0.10.0",
     "vim": "^0.1.0",
     "zod": "^4.1.13"

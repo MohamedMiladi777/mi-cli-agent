@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { Box, Text, useApp } from "ink";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { Box, Text, useApp, useInput, useStdout } from "ink";
 import type { ModelMessage } from "ai";
 import { runAgent } from "../agent/run.ts";
 import { MessageList, type Message } from "./components/MessageList.tsx";
@@ -11,7 +11,9 @@ import { ToolApproval } from "./components/ToolApproval.tsx";
 import { TokenUsage } from "./components/TokenUsage.tsx";
 import type { ToolApprovalRequest, TokenUsageInfo } from "../types.ts";
 import type { AgentMode } from "../types.ts";
-import {useWindowSize} from "ink"
+import { useWindowSize } from "ink";
+import { useRef } from "react";
+import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
 
 interface ActiveToolCall extends ToolCallProps {
   id: string;
@@ -19,7 +21,7 @@ interface ActiveToolCall extends ToolCallProps {
 
 export function App() {
   const { exit } = useApp();
-  const {rows, columns} = useWindowSize();
+  const { rows, columns } = useWindowSize();
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationHistory, setConversationHistory] = useState<
     ModelMessage[]
@@ -32,7 +34,32 @@ export function App() {
   const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const [mode, setMode] = useState<AgentMode>("default");
 
+  //ref for the scorll view behaviour
+  const scrollRef = useRef<ScrollViewRef>(null);
+  const { stdout } = useStdout();
+
+  // 1. Handle Terminal Resizing due to manual window change
+
+  useEffect(() => {
+    const handleResize = () => scrollRef.current?.remeasure();
+    stdout?.on("resize", handleResize);
+    return () => {
+      stdout?.off("resize", handleResize);
+    };
+  }, [stdout]);
   // Mode switch
+
+  // Auto scroll functionality
+
+  useEffect(() => {
+    scrollRef?.current?.remeasure();
+    scrollRef?.current?.scrollToBottom();
+  }, [messages, streamingText, activeToolCalls, pendingApproval]);
+
+  useInput((input, key) => {
+    if (key.upArrow) scrollRef?.current?.scrollBy(1);
+    if (key.downArrow) scrollRef?.current?.scrollBy(-1);
+  });
 
   //const [mode , setMode] = useState<AgentMode>("default");
 
@@ -113,121 +140,222 @@ export function App() {
 
   return (
     //this is the etire shell
-    <Box flexDirection="column" padding={1} height = {rows} width={columns}>
+
+    <Box
+      flexDirection="column"
+      padding={1}
+      flexGrow={1}
+      minHeight={0}
+      height={rows}
+      width={columns}
+    >
       {/* // This is the content above the footer */}
-      <Box
-        flexDirection="column"
-        flexGrow={1}
-        // justifyContent="center"
-        // alignItems="center"
-      >
-        {/* This is a spacer */}
-        <Box flexGrow={1} />
 
-        {/* This is the home content */}
-        <Box
-          alignItems="center"
-          flexDirection="column"
-          width="100%"
-        >
-          {/* //changed code */}
+      {/* //changed code */}
 
-           <Box flexDirection="column" marginBottom={1}>
-            <MessageList messages={messages} />
-             
-            
-
-                        {activeToolCalls.length > 0 && !pendingApproval && (
-              <Box flexDirection="column" marginTop={1}>
-                {activeToolCalls.map((tc) => (
-                  <ToolCall
-                    key={tc.id}
-                    name={tc.name}
-                    args={tc.args}
-                    status={tc.status}
-                    result={tc.result}
-                  />
-                ))}
-              </Box>
-            )}
-
-            {isLoading &&
-              !streamingText &&
-              activeToolCalls.length === 0 &&
-              !pendingApproval && (
-                <Box marginTop={1}>
-                  <Spinner />
-                </Box>
-              )}
-
-            {pendingApproval && (
-              <ToolApproval
-                toolName={pendingApproval.toolName}
-                args={pendingApproval.args}
-                onResolve={(approved) => {
-                  pendingApproval.resolve(approved);
-                  setPendingApproval(null);
-                }}
-              />
-            )}
-          </Box> 
-
-          {/* Ducky wrapper */}
-
-          <Box alignItems="center" flexDirection="column" width="100%">
-            <Box flexDirection="column" alignItems="center">
-              <Text bold color="White">
-                DUCKY
+      <Box flexDirection="column" flexGrow={1}>
+        <ScrollView ref={scrollRef}>
+          {streamingText && (
+            <Box flexDirection="column" marginTop={1}>
+              <Text color="green" bold>
+                › assistant
               </Text>
+              <Box marginLeft={2}>
+                <Text> {streamingText} </Text>
+                <Text color="gray">▌</Text>
+              </Box>
             </Box>
+          )}
+          <MessageList messages={messages} />
 
-            {/* Creates a gap between Ducky and panel */}
+          {activeToolCalls.length > 0 && !pendingApproval && (
+            <Box flexDirection="column" marginTop={1}>
+              {activeToolCalls.map((tc) => (
+                <ToolCall
+                  key={tc.id}
+                  name={tc.name}
+                  args={tc.args}
+                  status={tc.status}
+                  result={tc.result}
+                />
+              ))}
+            </Box>
+          )}
 
-            <Box height={1} />
-
-            {!pendingApproval && (
-              // Prompt panel
-
-              <Box width={100} paddingX={4} paddingY={2} backgroundColor="grey">
-                <Box flexDirection="column" alignItems="center">
-                  <Box
-                    width={90}
-                    paddingX={2}
-                    paddingY={1}
-                    alignItems="center"
-                    flexDirection="column"
-                    backgroundColor={"black"}
-                  >
-                   
-		
-		 
-		  <Input onSubmit={handleSubmit} disabled={isLoading} />
-                    <ModeSelector mode={mode} />
-                  </Box>
-                </Box>
+          {isLoading &&
+            !streamingText &&
+            activeToolCalls.length === 0 &&
+            !pendingApproval && (
+              <Box marginTop={1}>
+                <Spinner />
               </Box>
             )}
+
+          {pendingApproval && (
+            <ToolApproval
+              toolName={pendingApproval.toolName}
+              args={pendingApproval.args}
+              onResolve={(approved) => {
+                pendingApproval.resolve(approved);
+                setPendingApproval(null);
+              }}
+            />
+          )}
+        </ScrollView>
+      </Box>
+
+      {/* Ducky wrapper */}
+
+      <Box flexDirection="column" flexShrink={0}>
+        {!streamingText && messages.length === 0 && (
+          <Box alignItems="center" flexDirection="column" width="100%">
+            <Text bold color="White">
+              DUCKY
+            </Text>
+            {/* Todo : Add right side pane*/}
           </Box>
-           {streamingText && (
-              <Box flexDirection="column" marginTop={1}>
-                <Text color="green" bold>
-                  › assistant
-                </Text>
-                <Box marginLeft={2}>
-                  <Text>{streamingText}</Text>
-                  <Text color="gray">▌</Text>
-                </Box>
+        )}
+        {/* Creates a gap between Ducky and panel */}
+
+        <Box height={1} />
+
+        {!pendingApproval && (
+          // Prompt panel
+
+          <Box paddingX={4} paddingY={2} backgroundColor="grey" width="100%">
+            <Box flexDirection="column" alignItems="center" width="100%">
+              <Box
+                paddingX={2}
+                paddingY={1}
+                alignItems="center"
+                flexDirection="column"
+                backgroundColor={"black"}
+                width="100%"
+              >
+                <Input onSubmit={handleSubmit} disabled={isLoading} />
+                <ModeSelector mode={mode} />
               </Box>
-            )}
-        </Box>
-        <Box flexGrow={1} />
+            </Box>
+          </Box>
+        )}
       </Box>
+
       <TokenUsage usage={tokenUsage} />
-  
- 
-
-
-      </Box>
-      
+    </Box>
   );
 }
+
+/**Code with spacers
+ * 
+ * <Box flexDirection="column" padding={1} height = {rows} width={columns}>
+      // {/* // This is the content above the footer */
+//       <Box
+//         flexDirection="column"
+//         flexGrow={1}
+//         // justifyContent="center"
+//         // alignItems="center"
+//       >
+//         {/* This is a spacer */}
+//         {/* <Box flexGrow={1} /> */}
+
+//         {/* This is the home content */}
+//         <Box
+//           alignItems="center"
+//           flexDirection="column"
+//           width="100%"
+//         >
+//           {/* //changed code */}
+
+//            <Box flexDirection="column" marginBottom={1}>
+//             {streamingText && (
+//               <Box flexDirection="column" marginTop={1}>
+//                 <Text color="green" bold>
+//                   › assistant
+//                 </Text>
+//                 <Box marginLeft={2}>
+//                   <Text>{streamingText}</Text>
+//                   <Text color="gray">▌</Text>
+//                 </Box>
+//               </Box>
+//             )}
+//             <MessageList messages={messages} />
+
+//                         {activeToolCalls.length > 0 && !pendingApproval && (
+//               <Box flexDirection="column" marginTop={1}>
+//                 {activeToolCalls.map((tc) => (
+//                   <ToolCall
+//                     key={tc.id}
+//                     name={tc.name}
+//                     args={tc.args}
+//                     status={tc.status}
+//                     result={tc.result}
+//                   />
+//                 ))}
+//               </Box>
+//             )}
+
+//             {isLoading &&
+//               !streamingText &&
+//               activeToolCalls.length === 0 &&
+//               !pendingApproval && (
+//                 <Box marginTop={1}>
+//                   <Spinner />
+//                 </Box>
+//               )}
+
+//             {pendingApproval && (
+//               <ToolApproval
+//                 toolName={pendingApproval.toolName}
+//                 args={pendingApproval.args}
+//                 onResolve={(approved) => {
+//                   pendingApproval.resolve(approved);
+//                   setPendingApproval(null);
+//                 }}
+//               />
+//             )}
+//           </Box>
+
+//           {/* Ducky wrapper */}
+
+//           <Box alignItems="center" flexDirection="column" width="100%">
+//             <Box flexDirection="column" alignItems="center">
+//               <Text bold color="White">
+//                 DUCKY
+//               </Text>
+//             </Box>
+
+//             {/* Creates a gap between Ducky and panel */}
+
+//             <Box height={1} />
+
+//             {!pendingApproval && (
+//               // Prompt panel
+
+//               <Box width={100} paddingX={4} paddingY={2} backgroundColor="grey">
+//                 <Box flexDirection="column" alignItems="center">
+//                   <Box
+//                     width={90}
+//                     paddingX={2}
+//                     paddingY={1}
+//                     alignItems="center"
+//                     flexDirection="column"
+//                     backgroundColor={"black"}
+//                   >
+
+// 		  <Input onSubmit={handleSubmit} disabled={isLoading} />
+//                     <ModeSelector mode={mode} />
+//                   </Box>
+//                 </Box>
+//               </Box>
+//             )}
+//           </Box>
+
+//         </Box>
+//         {/* <Box flexGrow={1} /> */}
+//       </Box>
+//       <TokenUsage usage={tokenUsage} />
+
+//       </Box>
+
+//   );
+// }
