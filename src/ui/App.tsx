@@ -132,22 +132,12 @@ export function App() {
         >
           {/* //changed code */}
 
-          {/* <Box flexDirection="column" marginBottom={1}>
+           <Box flexDirection="column" marginBottom={1}>
             <MessageList messages={messages} />
+             
+            
 
-            {streamingText && (
-              <Box flexDirection="column" marginTop={1}>
-                <Text color="green" bold>
-                  › Assistant
-                </Text>
-                <Box marginLeft={2}>
-                  <Text>{streamingText}</Text>
-                  <Text color="gray">▌</Text>
-                </Box>
-              </Box>
-            )}
-
-            {activeToolCalls.length > 0 && !pendingApproval && (
+                        {activeToolCalls.length > 0 && !pendingApproval && (
               <Box flexDirection="column" marginTop={1}>
                 {activeToolCalls.map((tc) => (
                   <ToolCall
@@ -180,7 +170,7 @@ export function App() {
                 }}
               />
             )}
-          </Box> */}
+          </Box> 
 
           {/* Ducky wrapper */}
 
@@ -208,17 +198,36 @@ export function App() {
                     flexDirection="column"
                     backgroundColor={"black"}
                   >
-                    <Input onSubmit={handleSubmit} disabled={isLoading} />
+                   
+		
+		 
+		  <Input onSubmit={handleSubmit} disabled={isLoading} />
                     <ModeSelector mode={mode} />
                   </Box>
                 </Box>
               </Box>
             )}
           </Box>
+           {streamingText && (
+              <Box flexDirection="column" marginTop={1}>
+                <Text color="green" bold>
+                  › assistant
+                </Text>
+                <Box marginLeft={2}>
+                  <Text>{streamingText}</Text>
+                  <Text color="gray">▌</Text>
+                </Box>
+              </Box>
+            )}
         </Box>
         <Box flexGrow={1} />
       </Box>
       <TokenUsage usage={tokenUsage} />
-    </Box>
+  
+ 
+
+
+      </Box>
+      
   );
 }
