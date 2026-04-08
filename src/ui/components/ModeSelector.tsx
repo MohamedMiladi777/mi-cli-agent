@@ -12,7 +12,7 @@ interface ModeSelectorProps{
 export function ModeSelector({mode}: ModeSelectorProps) {
 
   return( 
-  <Box>
+  <Box >
     <Text dimColor> Current Mode : {mode}</Text>
   </Box>
   );

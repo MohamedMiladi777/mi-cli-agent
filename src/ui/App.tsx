@@ -14,7 +14,7 @@ import type { AgentMode } from "../types.ts";
 import { useWindowSize } from "ink";
 import { useRef } from "react";
 import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
-
+import { Header } from "./components/Header.tsx";
 interface ActiveToolCall extends ToolCallProps {
   id: string;
 }
@@ -41,6 +41,7 @@ export function App() {
   // 1. Handle Terminal Resizing due to manual window change
 
   useEffect(() => {
+    if (stdout.isTTY) console.log("This is a terminal");
     const handleResize = () => scrollRef.current?.remeasure();
     stdout?.on("resize", handleResize);
     return () => {
@@ -153,14 +154,21 @@ export function App() {
 
       {/* //changed code */}
 
-      <Box flexDirection="column" flexGrow={1}>
+      <Box
+        flexDirection="column"
+        flexGrow={1}
+        minHeight={0}
+      >
+        {!streamingText && messages.length === 0 && (
+         <Header/>
+        )}
         <ScrollView ref={scrollRef}>
           {streamingText && (
             <Box flexDirection="column" marginTop={1}>
               <Text color="green" bold>
                 › assistant
               </Text>
-              <Box marginLeft={2}>
+              <Box marginLeft={2} paddingBottom={6}>
                 <Text> {streamingText} </Text>
                 <Text color="gray">▌</Text>
               </Box>
@@ -207,14 +215,6 @@ export function App() {
       {/* Ducky wrapper */}
 
       <Box flexDirection="column" flexShrink={0}>
-        {!streamingText && messages.length === 0 && (
-          <Box alignItems="center" flexDirection="column" width="100%">
-            <Text bold color="White">
-              DUCKY
-            </Text>
-            {/* Todo : Add right side pane*/}
-          </Box>
-        )}
         {/* Creates a gap between Ducky and panel */}
 
         <Box height={1} />
@@ -222,19 +222,17 @@ export function App() {
         {!pendingApproval && (
           // Prompt panel
 
-          <Box paddingX={4} paddingY={2} backgroundColor="grey" width="100%">
-            <Box flexDirection="column" alignItems="center" width="100%">
-              <Box
-                paddingX={2}
-                paddingY={1}
-                alignItems="center"
-                flexDirection="column"
-                backgroundColor={"black"}
-                width="100%"
-              >
-                <Input onSubmit={handleSubmit} disabled={isLoading} />
-                <ModeSelector mode={mode} />
-              </Box>
+          <Box flexDirection="column" alignItems="center" width="100%">
+            <Box
+              paddingX={2}
+              paddingY={1}
+              alignItems="center"
+              flexDirection="column"
+              backgroundColor={"black"}
+              width="100%"
+            >
+              <Input onSubmit={handleSubmit} disabled={isLoading} />
+              <ModeSelector mode={mode} />
             </Box>
           </Box>
         )}
@@ -244,118 +242,3 @@ export function App() {
     </Box>
   );
 }
-
-/**Code with spacers
- * 
- * <Box flexDirection="column" padding={1} height = {rows} width={columns}>
-      // {/* // This is the content above the footer */
-//       <Box
-//         flexDirection="column"
-//         flexGrow={1}
-//         // justifyContent="center"
-//         // alignItems="center"
-//       >
-//         {/* This is a spacer */}
-//         {/* <Box flexGrow={1} /> */}
-
-//         {/* This is the home content */}
-//         <Box
-//           alignItems="center"
-//           flexDirection="column"
-//           width="100%"
-//         >
-//           {/* //changed code */}
-
-//            <Box flexDirection="column" marginBottom={1}>
-//             {streamingText && (
-//               <Box flexDirection="column" marginTop={1}>
-//                 <Text color="green" bold>
-//                   › assistant
-//                 </Text>
-//                 <Box marginLeft={2}>
-//                   <Text>{streamingText}</Text>
-//                   <Text color="gray">▌</Text>
-//                 </Box>
-//               </Box>
-//             )}
-//             <MessageList messages={messages} />
-
-//                         {activeToolCalls.length > 0 && !pendingApproval && (
-//               <Box flexDirection="column" marginTop={1}>
-//                 {activeToolCalls.map((tc) => (
-//                   <ToolCall
-//                     key={tc.id}
-//                     name={tc.name}
-//                     args={tc.args}
-//                     status={tc.status}
-//                     result={tc.result}
-//                   />
-//                 ))}
-//               </Box>
-//             )}
-
-//             {isLoading &&
-//               !streamingText &&
-//               activeToolCalls.length === 0 &&
-//               !pendingApproval && (
-//                 <Box marginTop={1}>
-//                   <Spinner />
-//                 </Box>
-//               )}
-
-//             {pendingApproval && (
-//               <ToolApproval
-//                 toolName={pendingApproval.toolName}
-//                 args={pendingApproval.args}
-//                 onResolve={(approved) => {
-//                   pendingApproval.resolve(approved);
-//                   setPendingApproval(null);
-//                 }}
-//               />
-//             )}
-//           </Box>
-
-//           {/* Ducky wrapper */}
-
-//           <Box alignItems="center" flexDirection="column" width="100%">
-//             <Box flexDirection="column" alignItems="center">
-//               <Text bold color="White">
-//                 DUCKY
-//               </Text>
-//             </Box>
-
-//             {/* Creates a gap between Ducky and panel */}
-
-//             <Box height={1} />
-
-//             {!pendingApproval && (
-//               // Prompt panel
-
-//               <Box width={100} paddingX={4} paddingY={2} backgroundColor="grey">
-//                 <Box flexDirection="column" alignItems="center">
-//                   <Box
-//                     width={90}
-//                     paddingX={2}
-//                     paddingY={1}
-//                     alignItems="center"
-//                     flexDirection="column"
-//                     backgroundColor={"black"}
-//                   >
-
-// 		  <Input onSubmit={handleSubmit} disabled={isLoading} />
-//                     <ModeSelector mode={mode} />
-//                   </Box>
-//                 </Box>
-//               </Box>
-//             )}
-//           </Box>
-
-//         </Box>
-//         {/* <Box flexGrow={1} /> */}
-//       </Box>
-//       <TokenUsage usage={tokenUsage} />
-
-//       </Box>
-
-//   );
-// }
