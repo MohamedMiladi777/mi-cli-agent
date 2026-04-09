@@ -12,8 +12,8 @@ interface ModeSelectorProps{
 export function ModeSelector({mode}: ModeSelectorProps) {
 
   return( 
-  <Box >
-    <Text dimColor> Current Mode : {mode}</Text>
+  <Box alignSelf="flex-start" paddingTop={1}>
+    <Text dimColor color={"grey"}> Current Mode : {mode}</Text>
   </Box>
   );
 

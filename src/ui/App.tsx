@@ -9,12 +9,13 @@ import { Input } from "./components/Input.tsx";
 import { ModeSelector } from "./components/ModeSelector.tsx";
 import { ToolApproval } from "./components/ToolApproval.tsx";
 import { TokenUsage } from "./components/TokenUsage.tsx";
-import type { ToolApprovalRequest, TokenUsageInfo } from "../types.ts";
+import type { ToolApprovalRequest, TokenUsageInfo, ModelName } from "../types.ts";
 import type { AgentMode } from "../types.ts";
 import { useWindowSize } from "ink";
 import { useRef } from "react";
 import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
 import { Header } from "./components/Header.tsx";
+import { ModelSwitcher } from "./components/ModelSwitcher.tsx";
 interface ActiveToolCall extends ToolCallProps {
   id: string;
 }
@@ -33,6 +34,7 @@ export function App() {
     useState<ToolApprovalRequest | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const [mode, setMode] = useState<AgentMode>("default");
+  const [model, setModel] = useState<ModelName>("gpt-5-mini");
 
   //ref for the scorll view behaviour
   const scrollRef = useRef<ScrollViewRef>(null);
@@ -228,11 +230,12 @@ export function App() {
               paddingY={1}
               alignItems="center"
               flexDirection="column"
-              backgroundColor={"black"}
+              backgroundColor="FFFFFF"
               width="100%"
             >
               <Input onSubmit={handleSubmit} disabled={isLoading} />
               <ModeSelector mode={mode} />
+              <ModelSwitcher model={model}/>
             </Box>
           </Box>
         )}

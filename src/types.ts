@@ -46,3 +46,6 @@ export type AIMessage =
 // Define agent modes, the user can swtich between three modes: normal, dev and student
 
 export type AgentMode = "default" | "dev" | "student";
+export type ModelName = "gpt-5-mini" | "gemma-4-26b-a4b";
+
+
