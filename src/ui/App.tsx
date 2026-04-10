@@ -124,7 +124,8 @@ export function App() {
           onTokenUsage: (usage) => {
             setTokenUsage(usage);
           },
-        });
+        },
+      model);
 
         setConversationHistory(newHistory);
       } catch (error) {
@@ -138,7 +139,7 @@ export function App() {
         setIsLoading(false);
       }
     },
-    [conversationHistory, exit],
+    [conversationHistory, exit, model],
   );
 
   return (
@@ -235,7 +236,7 @@ export function App() {
             >
               <Input onSubmit={handleSubmit} disabled={isLoading} />
               <ModeSelector mode={mode} />
-              <ModelSwitcher model={model}/>
+              <ModelSwitcher model={model}  handleSelect={setModel} />
             </Box>
           </Box>
         )}

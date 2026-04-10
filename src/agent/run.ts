@@ -1,5 +1,4 @@
 import { streamText, type ModelMessage } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { getTracer } from "@lmnr-ai/lmnr";
 import { tools } from "./tools/index.ts";
 import { executeTool } from "./executeTool.ts";
@@ -17,21 +16,26 @@ import {
 import { filterCompatibleMessages } from "./system/filterMessages.ts";
 import { addMessage, getMessages } from "./memory/db.ts";
 import { get } from "http";
+import { getModelConfig } from "./config/getModelConfig.ts";
+
 Laminar.initialize({
   projectApiKey: process.env.LMNR_API_KEY,
 });
 
-const MODEL_NAME = "gpt-5-mini";
+// const MODEL_NAME = "gpt-5-mini";
 
 export async function runAgent(
   userMessage: string,
   conversationHistory: ModelMessage[],
   callbacks: AgentCallbacks,
+  selectedModel: string = "gemma-4-26b-a4b",
 ): Promise<ModelMessage[]> {
-  const modelLimits = getModelLimits(MODEL_NAME);
+  console.log("[runAgent] Received selectedModel:", selectedModel);
+
+  const modelLimits = getModelLimits(selectedModel);
 
   // Add the user Message first into the DB.
-  await addMessage([{ role: "user", content: userMessage, tool_call_id:"1" }]);
+  await addMessage([{ role: "user", content: userMessage, tool_call_id: "1" }]);
   // Filter and check if we need to compact the conversation history before starting
   let workingHistory = filterCompatibleMessages(conversationHistory);
   const preCheckTokens = estimateMessagesTokens([
@@ -42,7 +46,7 @@ export async function runAgent(
 
   if (isOverThreshold(preCheckTokens.total, modelLimits.contextWindow)) {
     // Compact the conversation
-    workingHistory = await compactConversation(workingHistory, MODEL_NAME);
+    workingHistory = await compactConversation(workingHistory, selectedModel);
   }
 
   const messages: ModelMessage[] = [
@@ -74,23 +78,24 @@ export async function runAgent(
   reportTokenUsage();
 
   while (true) {
-    
-    
     //Load the DB first
     const history = await getMessages();
-    console.log("history :", history)
+    console.log("history :", history);
     //Fetch for previous data in lanceDB
-    let filtetedHistory = filterCompatibleMessages(history)
+    let filtetedHistory = filterCompatibleMessages(history);
 
     const messages: ModelMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT },
-    ...filtetedHistory,
-    { role: "user", content: userMessage },
-  ];
+      { role: "system", content: SYSTEM_PROMPT },
+      ...filtetedHistory,
+      { role: "user", content: userMessage },
+    ];
     // const response = await llm.chat(history)
 
+    const config = getModelConfig(selectedModel);
+
     const result = streamText({
-      model: openai(MODEL_NAME),
+      // model: openai(selectedModel),
+      model: config?.model,
       messages,
       tools,
       experimental_telemetry: {
@@ -100,8 +105,8 @@ export async function runAgent(
     });
 
     // Add the AI response back to the DB.
-    const  responseText = await result.text;
-    await addMessage([{role:"assistant", content: responseText}]);
+    const responseText = await result.text;
+    await addMessage([{ role: "assistant", content: responseText }]);
 
     const toolCalls: ToolCallInfo[] = [];
     let currentText = "";
