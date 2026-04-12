@@ -15,12 +15,10 @@ const models = [
 export function ModelSwitcher({ model, handleSelect }: ModelSwitcherProps) {
   return (
     <Box alignSelf="flex-start" paddingTop={1}>
-      {/* <Text dimColor color={"grey"}> */}
       <SelectInput
         items={models}
         onSelect={(item) => handleSelect(item.value as ModelName)}
       />
-      {/* </Text> */}
     </Box>
   );
 }

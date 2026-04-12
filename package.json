@@ -25,11 +25,13 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.72",
+    "@ai-sdk/anthropic": "^3.0.69",
+    "@ai-sdk/openai": "^3.0.52",
+    "@ai-sdk/openai-compatible": "^2.0.41",
     "@lancedb/lancedb": "^0.26.2",
     "@lmnr-ai/lmnr": "^0.7.9",
     "@types/shelljs": "^0.8.17",
-    "ai": "^5.0.102",
+    "ai": "^6.0.158",
     "apache-arrow": "^18.1.0",
     "ink": "github:vadimdemedes/ink",
     "ink-scroll-view": "^0.3.6",

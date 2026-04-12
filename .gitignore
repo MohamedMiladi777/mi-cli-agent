@@ -4,6 +4,7 @@ notes/
 messages.lance/
 .pnp/
 .pnp.js
+/home/miladi/repos/mi-cli-agent/debug.log
 
 # Build outputs
 dist/

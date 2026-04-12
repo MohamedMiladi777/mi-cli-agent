@@ -5,6 +5,7 @@ import { executeTool } from "./executeTool.ts";
 import { SYSTEM_PROMPT } from "./system/prompt.ts";
 import { Laminar } from "@lmnr-ai/lmnr";
 import type { AgentCallbacks, ToolCallInfo } from "../types.ts";
+import type { LanguageModel } from "ai";
 import {
   estimateMessagesTokens,
   getModelLimits,
@@ -17,6 +18,8 @@ import { filterCompatibleMessages } from "./system/filterMessages.ts";
 import { addMessage, getMessages } from "./memory/db.ts";
 import { get } from "http";
 import { getModelConfig } from "./config/getModelConfig.ts";
+import type { MockLanguageModelV3 } from "ai/test";
+import { debugLog } from "../utils/debugger.ts";
 
 Laminar.initialize({
   projectApiKey: process.env.LMNR_API_KEY,
@@ -91,11 +94,12 @@ export async function runAgent(
     ];
     // const response = await llm.chat(history)
 
-    const config = getModelConfig(selectedModel);
+    const config = await getModelConfig(selectedModel);
+    debugLog(`Config created:, config.model`);
 
     const result = streamText({
       // model: openai(selectedModel),
-      model: config?.model,
+      model: config.model as LanguageModel,
       messages,
       tools,
       experimental_telemetry: {
@@ -104,8 +108,40 @@ export async function runAgent(
       },
     });
 
+    debugLog("Stream text called");
+    debugLog(`result object ${typeof result}`);
+
+ /////////////////////////DEBUGGING
+
+debugLog("✅ streamText initialized");
+
+try {
+  // Inspect the stream BEFORE consuming it
+  const fullStream = result.fullStream;
+  debugLog(`Has fullStream: ${fullStream !== undefined}`);
+  
+  // Try reading from full stream first
+  for await (const event of result.fullStream) {
+    debugLog(`Stream event: ${JSON.stringify(event).substring(0, 100)}`);
+    if (event.type === 'text-delta') {
+      debugLog(`Text delta: ${event.text}`);
+    }
+    if (event.type === 'finish') {
+      debugLog(`Finish reason: ${event.finishReason}`);
+    }
+    break; // Just read first event
+  }
+} catch(e){
+
+}
+  
+
+ ////////////////////////END
+
     // Add the AI response back to the DB.
     const responseText = await result.text;
+    debugLog(`Got response text:, ${responseText.length, "chars"})`);
+
     await addMessage([{ role: "assistant", content: responseText }]);
 
     const toolCalls: ToolCallInfo[] = [];
