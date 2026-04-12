@@ -111,32 +111,6 @@ export async function runAgent(
     debugLog("Stream text called");
     debugLog(`result object ${typeof result}`);
 
- /////////////////////////DEBUGGING
-
-debugLog("✅ streamText initialized");
-
-try {
-  // Inspect the stream BEFORE consuming it
-  const fullStream = result.fullStream;
-  debugLog(`Has fullStream: ${fullStream !== undefined}`);
-  
-  // Try reading from full stream first
-  for await (const event of result.fullStream) {
-    debugLog(`Stream event: ${JSON.stringify(event).substring(0, 100)}`);
-    if (event.type === 'text-delta') {
-      debugLog(`Text delta: ${event.text}`);
-    }
-    if (event.type === 'finish') {
-      debugLog(`Finish reason: ${event.finishReason}`);
-    }
-    break; // Just read first event
-  }
-} catch(e){
-
-}
-  
-
- ////////////////////////END
 
     // Add the AI response back to the DB.
     const responseText = await result.text;
