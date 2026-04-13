@@ -9,13 +9,18 @@ import { Input } from "./components/Input.tsx";
 import { ModeSelector } from "./components/ModeSelector.tsx";
 import { ToolApproval } from "./components/ToolApproval.tsx";
 import { TokenUsage } from "./components/TokenUsage.tsx";
-import type { ToolApprovalRequest, TokenUsageInfo, ModelName } from "../types.ts";
+import type {
+  ToolApprovalRequest,
+  TokenUsageInfo,
+  ModelName,
+} from "../types.ts";
 import type { AgentMode } from "../types.ts";
 import { useWindowSize } from "ink";
 import { useRef } from "react";
 import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
 import { Header } from "./components/Header.tsx";
 import { ModelSwitcher } from "./components/ModelSwitcher.tsx";
+import { debugLog } from "../utils/debugger.ts";
 interface ActiveToolCall extends ToolCallProps {
   id: string;
 }
@@ -39,6 +44,19 @@ export function App() {
   //ref for the scorll view behaviour
   const scrollRef = useRef<ScrollViewRef>(null);
   const { stdout } = useStdout();
+
+  // Create actions to use for commands
+
+  const handleActions = {
+     openModelDialog: () => {
+      debugLog("Model is set too");
+      setModel("gemma-4-26b-a4b");
+    },
+     
+    openModeDialog: () => setMode("default"),
+  };
+
+  
 
   // 1. Handle Terminal Resizing due to manual window change
 
@@ -82,50 +100,54 @@ export function App() {
       setActiveToolCalls([]);
 
       try {
-        const newHistory = await runAgent(userInput, conversationHistory, {
-          onToken: (token) => {
-            setStreamingText((prev) => prev + token);
-          },
-          onToolCallStart: (name, args) => {
-            setActiveToolCalls((prev) => [
-              ...prev,
-              {
-                id: `${name}-${Date.now()}`,
-                name,
-                args,
-                status: "pending",
-              },
-            ]);
-          },
-          onToolCallEnd: (name, result) => {
-            setActiveToolCalls((prev) =>
-              prev.map((tc) =>
-                tc.name === name && tc.status === "pending"
-                  ? { ...tc, status: "complete", result }
-                  : tc,
-              ),
-            );
-          },
-          onComplete: (response) => {
-            if (response) {
-              setMessages((prev) => [
+        const newHistory = await runAgent(
+          userInput,
+          conversationHistory,
+          {
+            onToken: (token) => {
+              setStreamingText((prev) => prev + token);
+            },
+            onToolCallStart: (name, args) => {
+              setActiveToolCalls((prev) => [
                 ...prev,
-                { role: "assistant", content: response },
+                {
+                  id: `${name}-${Date.now()}`,
+                  name,
+                  args,
+                  status: "pending",
+                },
               ]);
-            }
-            setStreamingText("");
-            setActiveToolCalls([]);
+            },
+            onToolCallEnd: (name, result) => {
+              setActiveToolCalls((prev) =>
+                prev.map((tc) =>
+                  tc.name === name && tc.status === "pending"
+                    ? { ...tc, status: "complete", result }
+                    : tc,
+                ),
+              );
+            },
+            onComplete: (response) => {
+              if (response) {
+                setMessages((prev) => [
+                  ...prev,
+                  { role: "assistant", content: response },
+                ]);
+              }
+              setStreamingText("");
+              setActiveToolCalls([]);
+            },
+            onToolApproval: (name, args) => {
+              return new Promise<boolean>((resolve) => {
+                setPendingApproval({ toolName: name, args, resolve });
+              });
+            },
+            onTokenUsage: (usage) => {
+              setTokenUsage(usage);
+            },
           },
-          onToolApproval: (name, args) => {
-            return new Promise<boolean>((resolve) => {
-              setPendingApproval({ toolName: name, args, resolve });
-            });
-          },
-          onTokenUsage: (usage) => {
-            setTokenUsage(usage);
-          },
-        },
-      model);
+          model,
+        );
 
         setConversationHistory(newHistory);
       } catch (error) {
@@ -157,14 +179,8 @@ export function App() {
 
       {/* //changed code */}
 
-      <Box
-        flexDirection="column"
-        flexGrow={1}
-        minHeight={0}
-      >
-        {!streamingText && messages.length === 0 && (
-         <Header/>
-        )}
+      <Box flexDirection="column" flexGrow={1} minHeight={0}>
+        {!streamingText && messages.length === 0 && <Header />}
         <ScrollView ref={scrollRef}>
           {streamingText && (
             <Box flexDirection="column" marginTop={1}>
@@ -234,9 +250,13 @@ export function App() {
               backgroundColor="FFFFFF"
               width="100%"
             >
-              <Input onSubmit={handleSubmit} disabled={isLoading} />
+              <Input
+                onSubmit={handleSubmit}
+                disabled={isLoading}
+                actions={handleActions}
+              />
               <ModeSelector mode={mode} />
-              <ModelSwitcher model={model}  handleSelect={setModel} />
+              <ModelSwitcher model={model} handleSelect={setModel} />
             </Box>
           </Box>
         )}

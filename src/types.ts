@@ -47,5 +47,6 @@ export type AIMessage =
 
 export type AgentMode = "default" | "dev" | "student";
 export type ModelName = "gpt-5-mini" | "gemma-4-26b-a4b";
+export type CommandName = "model" | "mode" 
 
 
