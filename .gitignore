@@ -5,6 +5,11 @@ messages.lance/
 .pnp/
 .pnp.js
 /home/miladi/repos/mi-cli-agent/debug.log
+AGENTS.md
+AGENTSBACKUP.md
+CLAUDE.md
+opencode.json
+README.md
 
 # Build outputs
 dist/
