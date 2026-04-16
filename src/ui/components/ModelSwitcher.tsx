@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { ModelName } from "../../types.ts";
+import type { ModelName } from "../../core/types.ts";
 import SelectInput from "ink-select-input";
 import type { Mode } from "fs";
 

@@ -1,5 +1,5 @@
 import { Box, Text, render } from "ink";
-import type { AgentMode } from "../../types.ts";
+import type { AgentMode } from "../../core/types.ts";
 
 
 // Create an interface to pass props to ModeSelector

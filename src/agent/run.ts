@@ -4,7 +4,7 @@ import { tools } from "./tools/index.ts";
 import { executeTool } from "./executeTool.ts";
 import { SYSTEM_PROMPT } from "./system/prompt.ts";
 import { Laminar } from "@lmnr-ai/lmnr";
-import type { AgentCallbacks, ToolCallInfo } from "../types.ts";
+import type { AgentCallbacks, ToolCallInfo } from "../core/types.ts";
 import type { LanguageModel } from "ai";
 import {
   estimateMessagesTokens,
@@ -111,32 +111,6 @@ export async function runAgent(
     debugLog("Stream text called");
     debugLog(`result object ${typeof result}`);
 
- /////////////////////////DEBUGGING
-
-debugLog("✅ streamText initialized");
-
-try {
-  // Inspect the stream BEFORE consuming it
-  const fullStream = result.fullStream;
-  debugLog(`Has fullStream: ${fullStream !== undefined}`);
-  
-  // Try reading from full stream first
-  for await (const event of result.fullStream) {
-    debugLog(`Stream event: ${JSON.stringify(event).substring(0, 100)}`);
-    if (event.type === 'text-delta') {
-      debugLog(`Text delta: ${event.text}`);
-    }
-    if (event.type === 'finish') {
-      debugLog(`Finish reason: ${event.finishReason}`);
-    }
-    break; // Just read first event
-  }
-} catch(e){
-
-}
-  
-
- ////////////////////////END
 
     // Add the AI response back to the DB.
     const responseText = await result.text;
