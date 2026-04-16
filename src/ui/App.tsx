@@ -13,14 +13,17 @@ import type {
   ToolApprovalRequest,
   TokenUsageInfo,
   ModelName,
-} from "../types.ts";
-import type { AgentMode } from "../types.ts";
+} from "../core/types.ts";
+import type { AgentMode } from "../core/types.ts";
 import { useWindowSize } from "ink";
 import { useRef } from "react";
 import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
 import { Header } from "./components/Header.tsx";
 import { ModelSwitcher } from "./components/ModelSwitcher.tsx";
 import { debugLog } from "../utils/debugger.ts";
+import { ModelDialog } from "./components/ModelDialog.tsx";
+import { useModeCommand } from "./hooks/useModeCommand.ts";
+import { useModelCommand } from "./hooks/useModelCommand.ts";
 interface ActiveToolCall extends ToolCallProps {
   id: string;
 }
@@ -40,23 +43,23 @@ export function App() {
   const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const [mode, setMode] = useState<AgentMode>("default");
   const [model, setModel] = useState<ModelName>("gpt-5-mini");
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
   //ref for the scorll view behaviour
   const scrollRef = useRef<ScrollViewRef>(null);
   const { stdout } = useStdout();
 
   // Create actions to use for commands
-
+  const { isModelDialogOpen, openModelDialog, closeModelDialog } =
+    useModelCommand();
   const handleActions = {
-     openModelDialog: () => {
-      debugLog("Model is set too");
-      setModel("gemma-4-26b-a4b");
-    },
-     
+    //  openModelDialog: () => {
+    //   debugLog("Model is set too");
+    //   setModel("gemma-4-26b-a4b");
+    // },
+    openModelDialog: openModelDialog,
     openModeDialog: () => setMode("default"),
   };
-
-  
 
   // 1. Handle Terminal Resizing due to manual window change
 
@@ -166,103 +169,111 @@ export function App() {
 
   return (
     //this is the etire shell
+    <>
+      <Box
+        flexDirection="column"
+        padding={1}
+        flexGrow={1}
+        minHeight={0}
+        height={rows}
+        width={columns}
+      >
+        {/* // This is the content above the footer */}
 
-    <Box
-      flexDirection="column"
-      padding={1}
-      flexGrow={1}
-      minHeight={0}
-      height={rows}
-      width={columns}
-    >
-      {/* // This is the content above the footer */}
+        {/* //changed code */}
 
-      {/* //changed code */}
-
-      <Box flexDirection="column" flexGrow={1} minHeight={0}>
-        {!streamingText && messages.length === 0 && <Header />}
-        <ScrollView ref={scrollRef}>
-          {streamingText && (
-            <Box flexDirection="column" marginTop={1}>
-              <Text color="green" bold>
-                › assistant
-              </Text>
-              <Box marginLeft={2} paddingBottom={6}>
-                <Text> {streamingText} </Text>
-                <Text color="gray">▌</Text>
+        <Box flexDirection="column" flexGrow={1} minHeight={0}>
+          {!streamingText && messages.length === 0 && <Header />}
+          <ScrollView ref={scrollRef}>
+            {streamingText && (
+              <Box flexDirection="column" marginTop={1}>
+                <Text color="green" bold>
+                  › assistant
+                </Text>
+                <Box marginLeft={2} paddingBottom={6}>
+                  <Text> {streamingText} </Text>
+                  <Text color="gray">▌</Text>
+                </Box>
               </Box>
-            </Box>
-          )}
-          <MessageList messages={messages} />
+            )}
+            <MessageList messages={messages} />
 
-          {activeToolCalls.length > 0 && !pendingApproval && (
-            <Box flexDirection="column" marginTop={1}>
-              {activeToolCalls.map((tc) => (
-                <ToolCall
-                  key={tc.id}
-                  name={tc.name}
-                  args={tc.args}
-                  status={tc.status}
-                  result={tc.result}
-                />
-              ))}
-            </Box>
-          )}
-
-          {isLoading &&
-            !streamingText &&
-            activeToolCalls.length === 0 &&
-            !pendingApproval && (
-              <Box marginTop={1}>
-                <Spinner />
+            {activeToolCalls.length > 0 && !pendingApproval && (
+              <Box flexDirection="column" marginTop={1}>
+                {activeToolCalls.map((tc) => (
+                  <ToolCall
+                    key={tc.id}
+                    name={tc.name}
+                    args={tc.args}
+                    status={tc.status}
+                    result={tc.result}
+                  />
+                ))}
               </Box>
             )}
 
-          {pendingApproval && (
-            <ToolApproval
-              toolName={pendingApproval.toolName}
-              args={pendingApproval.args}
-              onResolve={(approved) => {
-                pendingApproval.resolve(approved);
-                setPendingApproval(null);
-              }}
-            />
-          )}
-        </ScrollView>
-      </Box>
+            {isLoading &&
+              !streamingText &&
+              activeToolCalls.length === 0 &&
+              !pendingApproval && (
+                <Box marginTop={1}>
+                  <Spinner />
+                </Box>
+              )}
 
-      {/* Ducky wrapper */}
-
-      <Box flexDirection="column" flexShrink={0}>
-        {/* Creates a gap between Ducky and panel */}
-
-        <Box height={1} />
-
-        {!pendingApproval && (
-          // Prompt panel
-
-          <Box flexDirection="column" alignItems="center" width="100%">
-            <Box
-              paddingX={2}
-              paddingY={1}
-              alignItems="center"
-              flexDirection="column"
-              backgroundColor="FFFFFF"
-              width="100%"
-            >
-              <Input
-                onSubmit={handleSubmit}
-                disabled={isLoading}
-                actions={handleActions}
+            {pendingApproval && (
+              <ToolApproval
+                toolName={pendingApproval.toolName}
+                args={pendingApproval.args}
+                onResolve={(approved) => {
+                  pendingApproval.resolve(approved);
+                  setPendingApproval(null);
+                }}
               />
-              <ModeSelector mode={mode} />
-              <ModelSwitcher model={model} handleSelect={setModel} />
-            </Box>
-          </Box>
-        )}
-      </Box>
+            )}
+          </ScrollView>
+        </Box>
 
-      <TokenUsage usage={tokenUsage} />
-    </Box>
+        {/* Ducky wrapper */}
+
+        <Box flexDirection="column" flexShrink={0}>
+          {/* Creates a gap between Ducky and panel */}
+
+          <Box height={1} />
+
+          {!pendingApproval && (
+            // Prompt panel
+
+            <Box flexDirection="column" alignItems="center" width="100%">
+              <Box
+                paddingX={2}
+                paddingY={1}
+                alignItems="center"
+                flexDirection="column"
+                backgroundColor="FFFFFF"
+                width="100%"
+              >
+                <Input
+                  onSubmit={handleSubmit}
+                  disabled={isLoading}
+                  actions={handleActions}
+                />
+                <ModeSelector mode={mode} />
+                {/* { <ModelSwitcher model={model} handleSelect={setModel} /> } */}
+                {isModelDialogOpen && (
+                  <ModelDialog
+                    onClose={closeModelDialog}
+                    onSelect={setModel}
+                    currentModel={model}
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
+        </Box>
+
+        <TokenUsage usage={tokenUsage} />
+      </Box>
+    </>
   );
 }

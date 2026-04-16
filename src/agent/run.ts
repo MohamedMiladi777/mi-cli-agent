@@ -4,7 +4,7 @@ import { tools } from "./tools/index.ts";
 import { executeTool } from "./executeTool.ts";
 import { SYSTEM_PROMPT } from "./system/prompt.ts";
 import { Laminar } from "@lmnr-ai/lmnr";
-import type { AgentCallbacks, ToolCallInfo } from "../types.ts";
+import type { AgentCallbacks, ToolCallInfo } from "../core/types.ts";
 import type { LanguageModel } from "ai";
 import {
   estimateMessagesTokens,

@@ -1,0 +1,1 @@
+This file contains the core features shared accross the entire app.

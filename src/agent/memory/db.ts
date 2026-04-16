@@ -1,5 +1,5 @@
 import * as lancedb from "@lancedb/lancedb";
-import type { AIMessage } from "../../types.ts";
+import type { AIMessage } from "../../core/types.ts";
 import { uuidv4 } from "zod";
 import { ur } from "zod/locales";
 import { get } from "http";

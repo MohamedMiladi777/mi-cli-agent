@@ -25,14 +25,15 @@ export function Input({ onSubmit, disabled = false, actions }: InputProps) {
 
         if (value.startsWith("/")) {
           try {
+            debugLog(`[SLASH] Attempting to parse: "${value}"`);
             const parsed = commandParser.run(value);
-            debugLog(`parsed = ${parsed.result} `);
+            debugLog(`[SLASH] Parsed successfully: ${parsed.result}`);
             handleSlashCommand(parsed);
-            debugLog(`handleSlashCommand = ${handleSlashCommand}`);
+            debugLog(`[SLASH] Dialog should open now`);
             setValue("");
           } catch (error) {
             debugLog(
-              `Not a valid command, the compiler is trying to parse: ${value}`,
+              `[SLASH] ERROR parsing: ${error instanceof Error ? error.message : String(error)}`,
             );
           }
         } else {

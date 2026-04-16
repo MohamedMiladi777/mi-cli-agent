@@ -1,4 +1,4 @@
-import { asciiLogo } from "../DuckyAsciiArt.ts";
+import { asciiLogo } from "../../assets/DuckyAsciiArt.ts";
 import type React from "react";
 import { Box, Text } from "ink";
 
