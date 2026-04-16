@@ -7,6 +7,7 @@ import { ToolCall, type ToolCallProps } from "./components/ToolCall.tsx";
 import { Spinner } from "./components/Spinner.tsx";
 import { Input } from "./components/Input.tsx";
 import { ModeSelector } from "./components/ModeSelector.tsx";
+import { ModelSelector } from "./components/ModelSelector.tsx";
 import { ToolApproval } from "./components/ToolApproval.tsx";
 import { TokenUsage } from "./components/TokenUsage.tsx";
 import type {
@@ -19,11 +20,11 @@ import { useWindowSize } from "ink";
 import { useRef } from "react";
 import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
 import { Header } from "./components/Header.tsx";
-import { ModelSwitcher } from "./components/ModelSwitcher.tsx";
 import { debugLog } from "../utils/debugger.ts";
 import { ModelDialog } from "./components/ModelDialog.tsx";
 import { useModeCommand } from "./hooks/useModeCommand.ts";
 import { useModelCommand } from "./hooks/useModelCommand.ts";
+import { ModeDialog } from "./components/ModeDialog.tsx";
 interface ActiveToolCall extends ToolCallProps {
   id: string;
 }
@@ -43,7 +44,7 @@ export function App() {
   const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const [mode, setMode] = useState<AgentMode>("default");
   const [model, setModel] = useState<ModelName>("gpt-5-mini");
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   //ref for the scorll view behaviour
   const scrollRef = useRef<ScrollViewRef>(null);
@@ -52,13 +53,17 @@ export function App() {
   // Create actions to use for commands
   const { isModelDialogOpen, openModelDialog, closeModelDialog } =
     useModelCommand();
+  const { isModeDialogOpen, openModeDialog, closeModeDialog } =
+    useModeCommand();
+
   const handleActions = {
     //  openModelDialog: () => {
     //   debugLog("Model is set too");
     //   setModel("gemma-4-26b-a4b");
     // },
     openModelDialog: openModelDialog,
-    openModeDialog: () => setMode("default"),
+    // openModeDialog: () => setMode("default"),
+    openModeDialog: openModeDialog,
   };
 
   // 1. Handle Terminal Resizing due to manual window change
@@ -71,7 +76,6 @@ export function App() {
       stdout?.off("resize", handleResize);
     };
   }, [stdout]);
-  // Mode switch
 
   // Auto scroll functionality
 
@@ -84,8 +88,6 @@ export function App() {
     if (key.upArrow) scrollRef?.current?.scrollBy(1);
     if (key.downArrow) scrollRef?.current?.scrollBy(-1);
   });
-
-  //const [mode , setMode] = useState<AgentMode>("default");
 
   const handleSubmit = useCallback(
     async (userInput: string) => {
@@ -258,7 +260,15 @@ export function App() {
                   disabled={isLoading}
                   actions={handleActions}
                 />
-                <ModeSelector mode={mode} />
+                {<ModeSelector mode={mode} />}
+                {<ModelSelector model={model} />}
+                {isModeDialogOpen && (
+                  <ModeDialog
+                    onClose={closeModeDialog}
+                    onSelect={setMode}
+                    currentMode={mode}
+                  />
+                )}
                 {/* { <ModelSwitcher model={model} handleSelect={setModel} /> } */}
                 {isModelDialogOpen && (
                   <ModelDialog

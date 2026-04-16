@@ -7,8 +7,8 @@ interface UseModeCommandReturn {
 }
 
 /**
- * This function is the state manager of the Model command
- * it takes void as @param and @returns useModelCommandReturn Object
+ * This function is the state manager of the Mode command
+ * it takes void as @param and @returns useModeCommandReturn Object
  */
 export const useModeCommand = (): UseModeCommandReturn => {
   const [isModeDialogOpen, setIsModeDialogOpen] = useState(false);
