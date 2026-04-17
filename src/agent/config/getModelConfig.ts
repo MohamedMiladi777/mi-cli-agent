@@ -31,11 +31,7 @@ export const getModelConfig = async (
     try {
       const lmstudio = createOpenAICompatible({
         name: "lmstudio",
-        // apiKey: "lmstudio",
         baseURL: "http://localhost:8081/v1",
-              // fetch: checkGemmaHealth()
-
-        // apiKey: "lmstudio",
       });
       return {
         // defaults to installed model when we use "".

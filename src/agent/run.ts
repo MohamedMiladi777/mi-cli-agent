@@ -16,16 +16,12 @@ import {
 } from "./context/index.ts";
 import { filterCompatibleMessages } from "./system/filterMessages.ts";
 import { addMessage, getMessages } from "./memory/db.ts";
-import { get } from "http";
 import { getModelConfig } from "./config/getModelConfig.ts";
-import type { MockLanguageModelV3 } from "ai/test";
 import { debugLog } from "../utils/debugger.ts";
 
 Laminar.initialize({
   projectApiKey: process.env.LMNR_API_KEY,
 });
-
-// const MODEL_NAME = "gpt-5-mini";
 
 export async function runAgent(
   userMessage: string,
@@ -82,16 +78,11 @@ export async function runAgent(
 
   while (true) {
     //Load the DB first
-    const history = await getMessages();
-    console.log("history :", history);
+    //const history = await getMessages();
+    //console.log("history :", history);
     //Fetch for previous data in lanceDB
-    let filtetedHistory = filterCompatibleMessages(history);
+    //let filtetedHistory = filterCompatibleMessages(history);
 
-    const messages: ModelMessage[] = [
-      { role: "system", content: SYSTEM_PROMPT },
-      ...filtetedHistory,
-      { role: "user", content: userMessage },
-    ];
     // const response = await llm.chat(history)
 
     const config = await getModelConfig(selectedModel);
@@ -111,12 +102,11 @@ export async function runAgent(
     debugLog("Stream text called");
     debugLog(`result object ${typeof result}`);
 
-
     // Add the AI response back to the DB.
-    const responseText = await result.text;
-    debugLog(`Got response text:, ${responseText.length, "chars"})`);
+    //const responseText = await result.text;
+    // debugLog(`Got response text:, ${(responseText.length, "chars")})`);
 
-    await addMessage([{ role: "assistant", content: responseText }]);
+    //await addMessage([{ role: "assistant", content: responseText }]);
 
     const toolCalls: ToolCallInfo[] = [];
     let currentText = "";

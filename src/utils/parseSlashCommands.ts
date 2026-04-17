@@ -33,9 +33,7 @@ interface Parser<T> {
 
 export const commandParser: Parser<CommandName> = {
   run(input: string): ParserResult<CommandName> {
-    debugLog(`[PARSER] Input: "${input}"`);
     const result = input.match(matches);
-    debugLog(`[PARSER] Regex match result: ${result ? "matched" : "no match"}`);
 
     if (!result) {
       throw new Error("Not a command");
@@ -43,7 +41,6 @@ export const commandParser: Parser<CommandName> = {
 
     const command = result[1] as CommandName;
     const args = result[2] || "";
-    debugLog(`[PARSER] Extracted command: "${command}"`);
 
     switch (command) {
       case "model":
