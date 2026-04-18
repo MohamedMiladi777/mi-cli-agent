@@ -291,6 +291,12 @@ export async function runAgent(
         isEnabled: true,
         tracer: getTracer(),
       },
+    
+      providerOptions: {
+        openai: {
+          textVerbosity  : "low"
+        }
+      }
     });
 
     const toolCalls: ToolCallInfo[] = [];
