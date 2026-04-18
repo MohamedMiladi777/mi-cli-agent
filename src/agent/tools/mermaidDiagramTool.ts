@@ -13,6 +13,10 @@ function generateFilename(): string {
 }
 // const execAsync = promisify(exec);
 
+/**
+ * Mermaid Diagram Generator Tool
+ */
+
 //Hardcoded for now, todo : remove the hardcoded path
 const obsidianPath =
   "/home/miladi/Dropbox/DropsyncFiles/Obsidian Vault/diagrams";
@@ -66,7 +70,3 @@ export const mermaidDiagramTool = tool({
     }
   },
 });
-
-/**
- * Mermaid Diagram Generator Tool
- */

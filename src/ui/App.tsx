@@ -158,6 +158,14 @@ export function App() {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
+        const err = error as Error & { cause?: unknown };
+        debugLog(
+          `[App] runAgent failed: name=${err.name}, message=${err.message}`,
+        );
+        if (err.cause) {
+          debugLog(`[App] runAgent failed cause: ${String(err.cause)}`);
+        }
+        debugLog(`[App] runAgent failed stack: ${err.stack ?? "no stack"}`);
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `Error: ${errorMessage}` },
