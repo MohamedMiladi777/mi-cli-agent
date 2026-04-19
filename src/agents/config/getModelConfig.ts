@@ -1,4 +1,4 @@
-import { createOpenAI, openai } from "@ai-sdk/openai";
+import { openai } from "@ai-sdk/openai";
 import { checkGemmaHealth } from "./checkGemmaHealth.ts";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel, LanguageModelMiddleware } from "ai";
@@ -42,6 +42,7 @@ export const getModelConfig = async (
     } catch (error) {
       throw new Error("Couldn't start Gemma, check if the server is running");
     }
+
   }
 
   throw new Error(`Unknown model: ${selectedModel}`);

@@ -21,7 +21,7 @@ import {
 } from "./context/index.ts";
 import { filterCompatibleMessages } from "./system/filterMessages.ts";
 import { debugLog } from "../utils/debugger.ts";
-
+import { getModelConfig } from "./config/getModelConfig.ts";
 Laminar.initialize({
   projectApiKey: process.env.LMNR_API_KEY,
 });
@@ -35,6 +35,8 @@ export async function mainAgent(
   selectedModel: string = "gemma-4-26b-a4b",
 ): Promise<ModelMessage[]> {
   const modelLimits = getModelLimits(selectedModel);
+  const {model: LlmModel} = await getModelConfig(selectedModel)
+
   const emitNoOutputFallback = () => {
     const fallback =
       "I apologize, but I wasn't able to generate a response. Could you please try rephrasing your message?";
@@ -85,7 +87,7 @@ export async function mainAgent(
 
   while (true) {
     const result = streamText({
-      model: openai(selectedModel),
+      model: LlmModel,
       messages,
       tools,
       stopWhen: stepCountIs(3),
