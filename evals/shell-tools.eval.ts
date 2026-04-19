@@ -1,5 +1,5 @@
 import { evaluate } from "@lmnr-ai/lmnr";
-import { shellTools } from "../src/agent/tools/index.ts";
+import { shellTools } from "../src/agents/tools/index.ts";
 import {
   toolsSelected,
   toolsAvoided,

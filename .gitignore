@@ -12,6 +12,10 @@ opencode.json
 .crush
 course.yaml
 
+# Memory
+
+src/agent/.memory
+
 # Build outputs
 dist/
 build/

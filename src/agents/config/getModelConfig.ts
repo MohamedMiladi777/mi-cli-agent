@@ -32,6 +32,7 @@ export const getModelConfig = async (
       const lmstudio = createOpenAICompatible({
         name: "lmstudio",
         baseURL: "http://localhost:8081/v1",
+        apiKey: "lmstudio"
       });
       return {
         // defaults to installed model when we use "".

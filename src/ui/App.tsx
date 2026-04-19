@@ -1,54 +1,44 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { Box, Text, useApp, useInput, useStdout } from "ink";
-import type { ModelMessage } from "ai";
-import { runAgent } from "../agent/run.ts";
-import { MessageList, type Message } from "./components/MessageList.tsx";
-import { ToolCall, type ToolCallProps } from "./components/ToolCall.tsx";
+import React, { useState, useEffect } from "react";
+import { Box, Text, useInput, useStdout } from "ink";
+import { MessageList } from "./components/MessageList.tsx";
+import { ToolCall } from "./components/ToolCall.tsx";
 import { Spinner } from "./components/Spinner.tsx";
 import { Input } from "./components/Input.tsx";
 import { ModeSelector } from "./components/ModeSelector.tsx";
 import { ModelSelector } from "./components/ModelSelector.tsx";
 import { ToolApproval } from "./components/ToolApproval.tsx";
 import { TokenUsage } from "./components/TokenUsage.tsx";
-import type {
-  ToolApprovalRequest,
-  TokenUsageInfo,
-  ModelName,
-} from "../core/types.ts";
 import type { AgentMode } from "../core/types.ts";
 import { useWindowSize } from "ink";
 import { useRef } from "react";
 import { ScrollView, type ScrollViewRef } from "ink-scroll-view";
 import { Header } from "./components/Header.tsx";
-import { debugLog } from "../utils/debugger.ts";
 import { ModelDialog } from "./components/ModelDialog.tsx";
 import { useModeCommand } from "./hooks/useModeCommand.ts";
 import { useModelCommand } from "./hooks/useModelCommand.ts";
 import { ModeDialog } from "./components/ModeDialog.tsx";
-interface ActiveToolCall extends ToolCallProps {
-  id: string;
-}
+import { useMainAgent } from "./hooks/useMainAgent.ts";
 
 export function App() {
-  const { exit } = useApp();
+  //const { exit } = useApp();
   const { rows, columns } = useWindowSize();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<
-    ModelMessage[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [streamingText, setStreamingText] = useState("");
-  const [activeToolCalls, setActiveToolCalls] = useState<ActiveToolCall[]>([]);
-  const [pendingApproval, setPendingApproval] =
-    useState<ToolApprovalRequest | null>(null);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const [mode, setMode] = useState<AgentMode>("default");
-  const [model, setModel] = useState<ModelName>("gpt-5-mini");
-  const [selectedIndex, setSelectedIndex] = useState(0);
 
   //ref for the scorll view behaviour
   const scrollRef = useRef<ScrollViewRef>(null);
   const { stdout } = useStdout();
+  const {
+    handleSubmit,
+    messages,
+    isLoading,
+    streamingText,
+    activeToolCalls,
+    pendingApproval,
+    tokenUsage,
+    model,
+    resolveToolApproval,
+    setModel,
+  } = useMainAgent();
 
   // Create actions to use for commands
   const { isModelDialogOpen, openModelDialog, closeModelDialog } =
@@ -57,12 +47,7 @@ export function App() {
     useModeCommand();
 
   const handleActions = {
-    //  openModelDialog: () => {
-    //   debugLog("Model is set too");
-    //   setModel("gemma-4-26b-a4b");
-    // },
     openModelDialog: openModelDialog,
-    // openModeDialog: () => setMode("default"),
     openModeDialog: openModeDialog,
   };
 
@@ -88,94 +73,6 @@ export function App() {
     if (key.upArrow) scrollRef?.current?.scrollBy(1);
     if (key.downArrow) scrollRef?.current?.scrollBy(-1);
   });
-
-  const handleSubmit = useCallback(
-    async (userInput: string) => {
-      if (
-        userInput.toLowerCase() === "exit" ||
-        userInput.toLowerCase() === "quit"
-      ) {
-        exit();
-        return;
-      }
-
-      setMessages((prev) => [...prev, { role: "user", content: userInput }]);
-      setIsLoading(true);
-      setStreamingText("");
-      setActiveToolCalls([]);
-
-      try {
-        const newHistory = await runAgent(
-          userInput,
-          conversationHistory,
-          {
-            onToken: (token) => {
-              setStreamingText((prev) => prev + token);
-            },
-            onToolCallStart: (name, args) => {
-              setActiveToolCalls((prev) => [
-                ...prev,
-                {
-                  id: `${name}-${Date.now()}`,
-                  name,
-                  args,
-                  status: "pending",
-                },
-              ]);
-            },
-            onToolCallEnd: (name, result) => {
-              setActiveToolCalls((prev) =>
-                prev.map((tc) =>
-                  tc.name === name && tc.status === "pending"
-                    ? { ...tc, status: "complete", result }
-                    : tc,
-                ),
-              );
-            },
-            onComplete: (response) => {
-              if (response) {
-                setMessages((prev) => [
-                  ...prev,
-                  { role: "assistant", content: response },
-                ]);
-              }
-              setStreamingText("");
-              setActiveToolCalls([]);
-            },
-            onToolApproval: (name, args) => {
-              return new Promise<boolean>((resolve) => {
-                setPendingApproval({ toolName: name, args, resolve });
-              });
-            },
-            onTokenUsage: (usage) => {
-              setTokenUsage(usage);
-            },
-          },
-          model,
-        );
-
-        setConversationHistory(newHistory);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        const err = error as Error & { cause?: unknown };
-        debugLog(
-          `[App] runAgent failed: name=${err.name}, message=${err.message}`,
-        );
-        if (err.cause) {
-          debugLog(`[App] runAgent failed cause: ${String(err.cause)}`);
-        }
-        debugLog(`[App] runAgent failed stack: ${err.stack ?? "no stack"}`);
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: `Error: ${errorMessage}` },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [conversationHistory, exit, model],
-  );
 
   return (
     //this is the etire shell
@@ -236,8 +133,9 @@ export function App() {
                 toolName={pendingApproval.toolName}
                 args={pendingApproval.args}
                 onResolve={(approved) => {
-                  pendingApproval.resolve(approved);
-                  setPendingApproval(null);
+                  //pendingApproval.resolve(approved);
+                  // setPendingApproval(null);
+                  resolveToolApproval(approved);
                 }}
               />
             )}

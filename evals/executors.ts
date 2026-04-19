@@ -1,7 +1,7 @@
 import { generateText, stepCountIs, type ModelMessage, type ToolSet } from "ai";
 import { openai } from "@ai-sdk/openai";
 
-import { SYSTEM_PROMPT } from "../src/agent/system/prompt.ts";
+import { SYSTEM_PROMPT } from "../src/agents/system/prompt.ts";
 import type {
   EvalData,
   SingleTurnResult,
